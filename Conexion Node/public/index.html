@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>CRUD de Productos</title>
+    
+        <link rel="stylesheet" href="https://bootswatch.com/5/vapor/bootstrap.min.css">
+        <style>
+            .container {
+                display: flex;
+                justify-content: space-between;
+                align-items: flex-start;
+            }
+    
+            #formAgregar {
+                flex: 1;
+                margin-right: 20px;
+            }
+    
+            #productosL {
+                flex: 1;
+            }
+    
+            #productos {
+                margin-top: 0;
+            }
+    
+            @media (max-width: 768px) {
+                .container {
+                    flex-direction: column;
+                }
+                #formAgregar {
+                    margin-right: 0;
+                }
+            
+            }
+
+            .btn-link {
+                background: none;
+                border: none;
+                color: #bc2bff; /* Color azul para imitar enlaces */
+                text-decoration: underline; /* Subrayado para imitar enlaces */
+                cursor: pointer; /* Cambia el cursor al pasar sobre el botón */
+                padding: 0; /* Ajusta el relleno para que no haya espacio adicional */
+            }
+    
+            .btn-link:hover {
+                color: #cd0afd; /* Cambia el color al pasar el cursor sobre el botón */
+            }
+        </style>
+    </head>
+<body>
+    <div class="container">
+        <div id="formAgregar">
+            <h1>CRUD de Productos</h1>
+            <h2>Agregar Producto</h2>
+            <form id="formAgregar">
+                Nombre: <input type="text" id="nombre" placeholder="Nombre del Producto" required><br><br>
+                Descripción: <textarea id="descripcion" placeholder="Descripción del Producto"></textarea><br><br>
+                Precio: <input type="number" id="precio" step="0.01" placeholder="Precio del Producto" required><br><br>
+                <button type="submit" class="btn btn-link">Agregar Producto</button>
+            </form>
+        </div>
+        <div id="productosL">
+            <h2>Lista de Productos</h2>
+            <ul id="productos"></ul>
+        </div>
+    </div>
+    <script>
+        function cargarProductos() {
+            fetch('/productos')
+            .then(response => response.json())
+            .then(productos => {
+                const listaProductos = document.getElementById('productos');
+                listaProductos.innerHTML = '';
+                productos.forEach(producto => {
+                    const item = document.createElement('li');
+                    item.innerHTML = `
+                        <strong>Nombre:</strong> ${producto.nombre}<br>
+                        <strong>Descripción:</strong> ${producto.descripcion}<br>
+                        <strong>Precio:</strong> ${producto.precio}<br>
+                    `;
+                    
+                    const botonEliminar = document.createElement('button');
+                    botonEliminar.textContent = 'Eliminar';
+                    botonEliminar.onclick = function() {
+                        eliminarProducto(producto.id);
+                    };
+                    item.appendChild(botonEliminar);
+                    
+                    const botonEditar = document.createElement('button');
+                    botonEditar.textContent = 'Editar';
+                    botonEditar.onclick = function() {
+                        editarProducto(producto);
+                    };
+                    item.appendChild(botonEditar);
+
+                    listaProductos.appendChild(item);
+                });
+            })
+            .catch(error => console.error('Error al obtener productos:', error));
+        }
+
+        document.getElementById('formAgregar').addEventListener('submit', function(event) {
+            event.preventDefault();
+            
+            const nombre = document.getElementById('nombre').value;
+            const descripcion = document.getElementById('descripcion').value;
+            const precio = document.getElementById('precio').value;
+
+            fetch('/productos', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ nombre, descripcion, precio }),
+            })
+            .then(response => {
+                if (response.ok) {
+                    cargarProductos();
+                    document.getElementById('nombre').value = '';
+                    document.getElementById('descripcion').value = '';
+                    document.getElementById('precio').value = '';
+                } else {
+                    console.error('Error al agregar producto:', response.statusText);
+                }
+            })
+            .catch(error => console.error('Error al agregar producto:', error));
+        });
+
+        function eliminarProducto(id) {
+            fetch(`/productos/${id}`, {
+                method: 'DELETE',
+            })
+            .then(response => {
+                if (response.ok) {
+                    cargarProductos(); // Actualizar la lista de productos en el DOM después de eliminar
+                } else {
+                    console.error('Error al eliminar producto:', response.statusText);
+                }
+            })
+            .catch(error => console.error('Error al eliminar producto:', error));
+        }
+        
+
+        function editarProducto(producto) {
+            const nuevoNombre = prompt('Ingrese el nuevo nombre:', producto.nombre);
+            const nuevaDescripcion = prompt('Ingrese la nueva descripción:', producto.descripcion);
+            const nuevoPrecio = prompt('Ingrese el nuevo precio:', producto.precio);
+            if (nuevoNombre !== null && nuevaDescripcion !== null && nuevoPrecio !== null) {
+                fetch(`/productos/${producto.id}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ nombre: nuevoNombre, descripcion: nuevaDescripcion, precio: nuevoPrecio }),
+                })
+                .then(response => {
+                    if (response.ok) {
+                        // No necesitas recargar los productos aquí, ya que la edición debe ser instantánea
+                        // cargarProductos();
+                        producto.nombre = nuevoNombre;
+                        producto.descripcion = nuevaDescripcion;
+                        producto.precio = nuevoPrecio;
+                        cargarProductos(); // Actualizar la lista de productos en el DOM
+                    } else {
+                        console.error('Error al editar producto:', response.statusText);
+                    }
+                })
+                .catch(error => console.error('Error al editar producto:', error));
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', cargarProductos);
+    </script>
+    <link rel="stylesheet" href="https://bootswatch.com/5/vapor/bootstrap.min.css">
+</body>
+</html>
+
+
+
