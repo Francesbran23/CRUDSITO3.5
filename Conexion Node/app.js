@@ -1,26 +1,39 @@
 const express = require("express");
 const mysql = require("mysql2");
 const bodyParser = require("body-parser");
+const path = require("path");
 
 const app = express();
 
-const con = mysql.createConnection({
-    host: 'localhost',
-    port: '3306',
-    user: 'root',
-    password: 'n0m3l0',
-    database: 'mybase'
-});
-
-con.connect();
-
+// Middleware para analizar el cuerpo de las solicitudes entrantes
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
-app.use(express.static('public'));
+
+const con = mysql.createConnection({
+    host: 'bidiykigptyapxlvbr2w-mysql.services.clever-cloud.com',
+    port: '3306',
+    user: 'ukj8xszbxw0vprst',
+    password: 'shk4kRusD87w9s0wBegK',
+    database: 'bidiykigptyapxlvbr2w'
+});
+
+con.connect(function(err) {
+    if (err) {
+        console.error('Error de conexión:', err);
+        return;
+    }
+    console.log('Conectado a la base de datos MySQL');
+});
+
+// Ruta para servir archivos estáticos desde el directorio 'public'
+app.use(express.static(path.join(__dirname, 'public')));
+
+// Ruta de inicio
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
 
 // Operaciones CRUD para productos
-
-// 1. Crear producto
 app.post('/productos', (req, res) => {
     const { nombre, descripcion, precio } = req.body;
     const query = 'INSERT INTO productos (nombre, descripcion, precio) VALUES (?, ?, ?)';
@@ -33,7 +46,6 @@ app.post('/productos', (req, res) => {
     });
 });
 
-// 2. Leer todos los productos
 app.get('/productos', (req, res) => {
     con.query('SELECT * FROM productos', (err, productos) => {
         if (err) {
@@ -44,7 +56,6 @@ app.get('/productos', (req, res) => {
     });
 });
 
-// 3. Actualizar un producto por su ID
 app.put('/productos/:id', (req, res) => {
     const id = req.params.id;
     const { nombre, descripcion, precio } = req.body;
@@ -58,7 +69,6 @@ app.put('/productos/:id', (req, res) => {
     });
 });
 
-// 4. Eliminar un producto por su ID
 app.delete('/productos/:id', (req, res) => {
     const id = req.params.id;
     con.query('DELETE FROM productos WHERE id = ?', [id], (err, result) => {
@@ -70,7 +80,7 @@ app.delete('/productos/:id', (req, res) => {
     });
 });
 
-// Escuchar en el puerto 4000
-app.listen(5000, () => {
-    console.log('Servidor escuchando en el puerto 5000');
+// Escuchar en el puerto 3400
+app.listen(3400, () => {
+    console.log('Servidor escuchando en el puerto 3400');
 });
